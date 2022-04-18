@@ -1,4 +1,3 @@
-from turtle import back
 import pygame
 import math
 import numpy as np
@@ -16,7 +15,9 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 YELLOW = (255, 190, 0)
-
+ORANGE = (255, 215, 0)
+GREY = (125, 125, 125)
+PALE_YELLOW = (240, 240, 0)
 # background_orbit_paths = np.array([[x, y] for x in range(0, WIDTH) for y in range(0, HEIGHT)])
 
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -54,15 +55,16 @@ class Vector:
         # return math.atan2(self.y, self.x)
 
 class CelestialBody:
-    def __init__(self, mass, x, y, vx, vy, color, radius):
+    def __init__(self, name, mass, x, y, vx, vy, color, radius, is_influenced=True):
         self.mass = mass
+        self.name = name
         self.x = x
         self.y = y
         self.vx = vx
         self.vy = vy
         self.color = color
         self.radius = radius
-    
+        self.is_influenced = is_influenced
 
     def get_gravitational_velocity_vec(self, object_b): # add to initial velocity vector
         force_magnitude = object_b.mass/Vector.distance(self, object_b)**2*(1/FPS) # vf_a=M_b/r^2
@@ -99,14 +101,41 @@ class CelestialBody:
             self.vx*=-1
         if self.y <= 0 or self.y + self.radius*2 >= HEIGHT:
             self.vy*=-1
-        
+
+    def update_all(self, solar_system):
+        solar_system_copy = solar_system.copy() # used to exclude current body without changing global 
+        del solar_system_copy[self.name]
+
+        if self.is_influenced: # sun is not influenced by planets
+            for body in solar_system_copy.values():
+                self.update_orbit_velocity(body)
+            self.update_position()
+        self.draw()
 
 
+# solar_system = {
+#     'sun' : CelestialBody(name='sun', mass=300000, x=WIDTH//2, y=HEIGHT//2, vx=0, vy=0, color=YELLOW, radius=40, is_influenced=False),
+#     'mercury' : CelestialBody(name='mercury', mass=100, x=WIDTH//2-50, y=HEIGHT//2, vx=0, vy=-10, color=WHITE, radius=3),
+#     'venus' : CelestialBody(name='venus', mass=1000, x=WIDTH//2-100, y=HEIGHT//2-3, vx=0, vy=-8, color=ORANGE, radius=7),
+#     'earth' : CelestialBody(name='earth', mass=1000, x=WIDTH//2-150, y=HEIGHT//2, vx=0, vy=-7, color=BLUE, radius=7),
+#     'mars' : CelestialBody(name='mars', mass=500, x=WIDTH//2-200, y=HEIGHT//2, vx=0, vy=-5, color=RED, radius=5),
+#     'jupiter' : CelestialBody(name='jupiter', mass=3000, x=WIDTH//2-300, y=HEIGHT//2, vx=0, vy=-4, color=RED, radius=20),
+#     'saturn' : CelestialBody(name='saturn', mass=2000, x=WIDTH//2-400, y=HEIGHT//2, vx=0, vy=-3, color=GREY, radius=16),
+#     'uranus' : CelestialBody(name='uranus', mass=1500, x=WIDTH//2-500, y=HEIGHT//2, vx=0, vy=-2, color=BLUE, radius=12),
+#     'neptune' : CelestialBody(name='neptune', mass=1500, x=WIDTH//2-600, y=HEIGHT//2, vx=0, vy=-1, color=BLUE, radius=12),
+#     }
 
-earth = CelestialBody(mass=10000, x=WIDTH//2-300, y=HEIGHT//2, vx=2, vy=2, color=BLUE, radius=7)
-sun = CelestialBody(mass=300000, x=WIDTH//2, y=HEIGHT//2, vx=0, vy=0, color=YELLOW, radius=20)
-moon = CelestialBody(mass=100, x=WIDTH//2-400+1, y=HEIGHT//2, vx=0, vy=2, color=WHITE, radius=3)
-mars = CelestialBody(mass=5000, x=WIDTH//2+300+7, y=HEIGHT//2, vx=0, vy=-4, color=RED, radius=5)
+solar_system = {
+    'sun' : CelestialBody(name='sun', mass=300000, x=WIDTH//2, y=HEIGHT//2, vx=0, vy=0, color=YELLOW, radius=40, is_influenced=False),
+    'mercury' : CelestialBody(name='mercury', mass=0, x=WIDTH//2-50, y=HEIGHT//2, vx=0, vy=-11, color=WHITE, radius=3),
+    'venus' : CelestialBody(name='venus', mass=0, x=WIDTH//2-100, y=HEIGHT//2-3, vx=0, vy=-8, color=ORANGE, radius=7),
+    'earth' : CelestialBody(name='earth', mass=0, x=WIDTH//2-150, y=HEIGHT//2, vx=0, vy=-6, color=BLUE, radius=7),
+    'mars' : CelestialBody(name='mars', mass=0, x=WIDTH//2-200, y=HEIGHT//2, vx=0, vy=-5, color=RED, radius=5),
+    'jupiter' : CelestialBody(name='jupiter', mass=0, x=WIDTH//2-300, y=HEIGHT//2, vx=0, vy=-4, color=RED, radius=20),
+    'saturn' : CelestialBody(name='saturn', mass=0, x=WIDTH//2-400, y=HEIGHT//2, vx=0, vy=-3.5, color=PALE_YELLOW, radius=16),
+    'uranus' : CelestialBody(name='uranus', mass=0, x=WIDTH//2-500, y=HEIGHT//2, vx=0, vy=-3, color=BLUE, radius=12),
+    'neptune' : CelestialBody(name='neptune', mass=0, x=WIDTH//2-600, y=HEIGHT//2, vx=0, vy=-2.5, color=BLUE, radius=12),
+    }
 
 running = True
 while running:
@@ -125,28 +154,11 @@ while running:
     # earth.handle_wall_collision()
     # moon.handle_wall_collision()
     # sun.handle_wall_collision()
+
     pygame.surfarray.blit_array(WIN, background_orbit_paths_array)
-    earth.update_orbit_velocity(sun)
-    earth.update_orbit_velocity(moon)
-    moon.update_orbit_velocity(sun)
-    moon.update_orbit_velocity(earth)
-    moon.update_orbit_velocity(mars)
-    earth.update_orbit_velocity(mars)
-    mars.update_orbit_velocity(sun)
-    mars.update_orbit_velocity(earth)
-    mars.update_orbit_velocity(moon)
-    mars.update_orbit_velocity(sun)
-    # sun.update_orbit_velocity(earth)
-    # sun.update_orbit_velocity(moon)
-    # sun.update_orbit_velocity(mars)
-    earth.update_position()
-    moon.update_position()
-    mars.update_position()
-    # sun.update_position()
-    earth.draw()
-    mars.draw()
-    moon.draw()
-    sun.draw()
+
+    for body in solar_system.values():
+        body.update_all(solar_system)
 
 
     pygame.display.flip()
