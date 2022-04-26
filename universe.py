@@ -1,5 +1,4 @@
 import pygame
-import math
 import numpy as np
 
 pygame.init()
@@ -67,25 +66,11 @@ class CelestialBody:
         self.is_influenced = is_influenced
 
     def get_gravitational_velocity_vec(self, object_b): # add to initial velocity vector
-        
-        # def instantaneous_velocity_function():
-
-        # # Integral method
-        # #__________________
-        # current_distance = Vector.distance(self, object_b)
-        # self.x -= self.vx
-        # self.y -= self.vy
-        # last_distance = Vector.distance(self, object_b)
-        # self.x += self.vx
-        # self.y += self.vy
-        # # force_magnitude = (-object_b.mass/(2*current_distance) - (-object_b.mass/(2*last_distance)))*(1/FPS)
-        # #__________________
 
         force_magnitude = object_b.mass/Vector.distance(self.get_vector(), object_b.get_vector())**2*(1/FPS) # vf_a=M_b/r^2
-
         force_direction = object_b.get_vector() - self.get_vector()
-        
         return force_magnitude/force_direction.magnitude()*force_direction
+
 
     def update_orbit_velocity(self, object_b):
         gravity_vec = self.get_gravitational_velocity_vec(object_b)
@@ -109,7 +94,6 @@ class CelestialBody:
             background_orbit_paths_array[int(self.x), int(self.y), 0:3] = self.color
 
     def draw(self):
-        # pygame.draw.circle(WIN, self.color, (self.x/ZOOM_FACTOR, self.y/ZOOM_FACTOR), self.radius/ZOOM_FACTOR)
         pygame.draw.circle(WIN, self.color, (self.x, self.y), self.radius)
 
     def handle_wall_collision(self):
@@ -130,40 +114,10 @@ class CelestialBody:
         self.draw()
 
 
-# testing to find the optimal velocity to create a circle
-#______________________________________________________
-x1 = WIDTH//2
-y1 = HEIGHT//2
-x2 = WIDTH//2-100
-y2 = y=HEIGHT//2
-mb = 200000
-b=0
-t=1/FPS*5
-r = Vector.distance(Vector(x1, y1), Vector(x2, y2))
-
-c = ((x1-x2)*((mb*t)/(r**3)+1))
-d = ((y1-y2)*((mb*t)/(r**3)+1))
-v_1 = (-2*c + math.sqrt((2*c)**2 -4*(-r**2 + c**2 + d**2 + 2*b*d+b**2)))/2
-v_2 = (-2*c - math.sqrt((2*c)**2 -4*(-r**2 + c**2 + d**2 + 2*b*d+b**2)))/2
-#______________________________________________________
-
-
-# solar_system = {
-#     'sun' : CelestialBody(name='sun', mass=200000, x=WIDTH//2, y=HEIGHT//2, vx=0, vy=0, color=PALE_YELLOW, radius=10, is_influenced=False),
-#     # 'mercury' : CelestialBody(name='mercury', mass=200, x=WIDTH//2-50, y=HEIGHT//2, vx=0, vy=6, color=WHITE, radius=3),
-#     # 'venus' : CelestialBody(name='venus', mass=200, x=WIDTH//2-100, y=HEIGHT//2, vx=0, vy= 3, color=PINK, radius=3)
-#     'earth' : CelestialBody(name='earth', mass=200, x=WIDTH//2-150, y=HEIGHT//2, vx=0, vy=-4, color=BLUE, radius=7)
-#     # 'mars' : CelestialBody(name='mars', mass=200, x=WIDTH//2-200, y=HEIGHT//2, vx=0, vy=5, color=RED, radius=5),
-#     # 'jupiter' : CelestialBody(name='jupiter', mass=200, x=WIDTH//2-300, y=HEIGHT//2, vx=0, vy=-3, color=RED, radius=15),
-#     # 'saturn' : CelestialBody(name='saturn', mass=200, x=WIDTH//2-400, y=HEIGHT//2, vx=0, vy=-2, color=PALE_YELLOW, radius=13),
-#     # 'uranus' : CelestialBody(name='uranus', mass=200, x=WIDTH//2-500, y=HEIGHT//2, vx=0, vy=-2, color=BLUE, radius=11),
-#     # 'neptune' : CelestialBody(name='neptune', mass=200, x=WIDTH//2-600, y=HEIGHT//2, vx=0, vy=-1, color=BLUE, radius=11)
-#     }
-
 solar_system = {
     'sun' : CelestialBody(name='sun', mass=200000, x=WIDTH//2, y=HEIGHT//2, vx=0, vy=0, color=PALE_YELLOW, radius=10, is_influenced=False),
     'mercury' : CelestialBody(name='mercury', mass=200, x=WIDTH//2-50, y=HEIGHT//2, vx=0, vy=6, color=WHITE, radius=3),
-    'venus' : CelestialBody(name='venus', mass=200, x=WIDTH//2-100, y=HEIGHT//2, vx=0, vy= 3, color=PINK, radius=3),
+    'venus' : CelestialBody(name='venus', mass=200, x=WIDTH//2-100, y=HEIGHT//2, vx=0.5, vy= 3, color=PINK, radius=3),
     'earth' : CelestialBody(name='earth', mass=200, x=WIDTH//2-150, y=HEIGHT//2, vx=0, vy=-4, color=BLUE, radius=7),
     'mars' : CelestialBody(name='mars', mass=200, x=WIDTH//2-200, y=HEIGHT//2, vx=0, vy=5, color=RED, radius=5),
     'jupiter' : CelestialBody(name='jupiter', mass=200, x=WIDTH//2-300, y=HEIGHT//2, vx=0, vy=-3, color=RED, radius=15),
@@ -178,16 +132,9 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        
-        # if event.type == pygame.MOUSEBUTTONDOWN:
-        #     if event.button == 4: # scroll down
-        #         ZOOM_FACTOR -= 0.05
-        #     if event.button == 5: # scroll up
-        #         ZOOM_FACTOR += 0.05
 
     WIN.fill(BACKGROUND_COLOR)
     pygame.surfarray.blit_array(WIN, background_orbit_paths_array)
-
 
     for body in solar_system.values():
         body.next_frame(solar_system)
