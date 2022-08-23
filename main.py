@@ -1,6 +1,7 @@
 import pygame
 import numpy as np
 from constants import *
+from vector_class import Vector
 
 pygame.init()
 
@@ -11,31 +12,6 @@ clock = pygame.time.Clock()
 # array to keep track of path of celestial bodies
 background_orbit_paths_array = np.zeros((WIDTH, HEIGHT, 3), dtype=np.uint8)
 background_orbit_paths_array[0:, 0:, 0:] = BACKGROUND_COLOR
-
-
-class Vector:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-    
-    def magnitude(self):
-        return (self.x**2 + self.y**2)**(1/2)
-
-    def __add__(self, other):
-        return Vector(self.x + other.x, self.y + other.y)
-
-    def __sub__(self, other):
-        return self + -1*other
-
-    def __repr__(self):
-        return f"({self.x}, {self.y})"
-
-    def __rmul__(self, scalar): # scalar must be on left side (scalar*Vector)
-        return Vector(self.x*scalar, self.y*scalar)
-
-    def distance(vec_1, vec_2): # can be used for distance between points as well
-        return (vec_2 - vec_1).magnitude()
-
 
 class CelestialBody:
     def __init__(self, name, mass, x, y, vx, vy, color, radius, is_influenced=True):
@@ -96,7 +72,6 @@ class CelestialBody:
                 self.update_orbit_velocity(body)
             self.update_position()
         self.draw()
-
 
 solar_system = {
     'sun' : CelestialBody(name='sun', mass=200000, x=WIDTH//2, y=HEIGHT//2, vx=0, vy=0, color=PALE_YELLOW, radius=10, is_influenced=False),
